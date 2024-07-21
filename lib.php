@@ -22,21 +22,20 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('/classes/classroom.php');
+require_once('classes/classroom.php');
 
 /**
  * Created a new classroom instance.
  */
 function classrooms_add_instance($instancedata, $mform = null): int {
-    $classroom = new classroom();
-    return $classroom->new($instancedata);
+    return classroom::new($instancedata);
 }
 
 /**
  * Updated an existing classroom instance.
  */
 function classrooms_update_instance($instancedata, $mform): bool {
-    $classroom = new classroom();
+    $classroom = new classroom($instancedata->id);
     return $classroom->update($instancedata);
 }
 
@@ -44,6 +43,54 @@ function classrooms_update_instance($instancedata, $mform): bool {
  * Delete a classroom instance.
  */
 function classrooms_delete_instance($id): bool {
-    $classroom = new classroom();
-    return $classroom->delete($id)
+    $classroom = new classroom($id);
+    return $classroom->delete();
+}
+
+function classrooms_sessions_table($data, $hiddencolumns = ['id']) {
+    global $OUTPUT;
+
+    if (!isset($data)) {
+        return false;
+    }
+
+    $table = new html_table;
+
+    foreach (reset($data) as $key => $val) {
+        if (!in_array(strtolower($key), $hiddencolumns)) {
+            $table->head[] = $key;
+        }
+    }
+    $table->head[] = 'Actions';
+
+    foreach ($data as $d) {
+        $cells = [];
+        foreach ($d as $key => $val) {
+            if (in_array(strtolower($key), $hiddencolumns)) {
+                continue;
+            }
+
+            if (str_contains($key, 'time')) {
+                $cells[] = new html_table_cell(date("d-m-Y g:iA", $val));
+                continue;
+            }
+
+            $cells[] = new html_table_cell($val);
+        }
+
+        // Actions column.
+        $icons = [];
+
+        // Edit icon.
+        $icons[] = $OUTPUT->action_icon(
+            new moodle_url('/mod/classrooms/view.php', ['action' => 'edit', 'sessionid' => $d->id]),
+            new pix_icon('b/document-edit', get_string('edit')),
+        );
+
+        $cells[] = implode("", $icons);
+
+        $table->data[] = new html_table_row($cells);
+    }
+
+    return html_writer::table($table);
 }

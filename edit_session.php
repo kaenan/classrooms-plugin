@@ -25,41 +25,57 @@
 require('../../config.php');
 require_once('lib.php');
 require_once('classes/classroom.php');
+require_once('classes/sessions.php');
+require_once('session_form.php');
 
 // Parameters.
 $id = required_param('id', PARAM_INT);
-$action = optional_param('action', null, PARAM_NOTAGS);
-$confirm = optional_param('confirm', null, PARAM_NOTAGS); // MD5 hash of action.
+$classroomid = required_param('classroomid', PARAM_INT);
+$sessionid = optional_param('sessionid', 0, PARAM_INT);
 
 // Get module data.
 [$course, $cm] = get_course_and_cm_from_cmid($id, 'classrooms');
 $instance = $DB->get_record('classrooms', ['id'=> $cm->instance], '*', MUST_EXIST);
-$classroom = new classroom($instance->id);
 
 // Page setup.
-$PAGE->set_url('/mod/classrooms/view.php', ['id' => $id]);
-$PAGE->set_cm($cm);
+$PAGE->set_url('/mod/classrooms/edit_session.php');
 $PAGE->set_context(context_module::instance($cm->id));
+$PAGE->set_cm($cm);
 $PAGE->set_title('Title Placeholder');
 $PAGE->set_heading('Heading Placeholder');
 $PAGE->add_body_class('limitedwidth');
 $PAGE->set_pagelayout('incourse');
 
 // Security checks.
+$restrict = false;
 
-// Buttons.
-$PAGE->set_button($OUTPUT->single_button(
-    new moodle_url('/mod/classrooms/edit_session.php', ['id' => $id, 'classroomid' => $classroom->id]),
-    'Add session'
-));
+$classroom = new classroom($classroomid, $restrict);
 
-// Print page.
+$form = new session_form();
+$form->set_data(
+    [
+        'id' => $id,
+        'classroomid' => $classroomid,
+        'sessionid' => $sessionid
+    ]
+);
+
+if ($data = $form->get_data()) {
+
+    if ($data->sessionid) {
+
+    } else {
+        $sessionid = sessions::new($data);
+    }
+
+    redirect(new moodle_url('/mod/classrooms/view.php', ['id' => $id]));
+
+} else if ($form->is_cancelled()) {
+    redirect(new moodle_url('/mod/classrooms/view.php', ['id' => $id]));
+}
+ 
 echo $OUTPUT->header();
 
-if ($table = classrooms_sessions_table($classroom->activesessions, ['id', 'classroomid'])) {
-    echo $table;
-} else {
-    echo "No sessions";
-}
+echo $form->display();
 
 echo $OUTPUT->footer();

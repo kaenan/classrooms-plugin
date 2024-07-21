@@ -32,21 +32,22 @@ class classroom {
 
     public $description;
 
-    public $sessions;
+    public $activesessions;
 
-    function __construct($id = null)
+    public $pastsessions;
+
+    function __construct($id, $restrict = true)
     {
-        if ($id) {
-            $data = classroom::get_classroom($id);
-            $this->id = $id;
-            $this->name = $data->name;
-            $this->description = $data->description;
+        $data = classroom::get_classroom($id);
+        $this->id = $id;
+        $this->name = $data->name;
+        $this->description = $data->description;
 
-            $this->sessions = $this->get_sessions();
-        }
+        $this->activesessions = $this->get_sessions(!$restrict);
+        $this->pastsessions = $this->get_sessions(!$restrict);
     }
 
-    public function new($data): int {
+    public static function new($data): int {
         global $DB;
 
         $record = new stdClass;
@@ -63,14 +64,16 @@ class classroom {
         $record = new stdClass;
         $record = $data;
         $record->timemodified = time();
+
+        $record->id = $this->id;
     
         return $DB->update_record('classrooms', $record);
     }
 
-    public function delete($id): bool {
+    public function delete(): bool {
         global $DB;
 
-        return $DB->delete_records('classrooms', ['id' => $id]);
+        return $DB->delete_records('classrooms', ['id' => $this->id]);
     }
 
     /**
@@ -80,10 +83,11 @@ class classroom {
     /**
      * Get sessions of classroom record.
     */
-    private function get_sessions() {
+    private function get_sessions($hidden) {
         global $DB;
 
         // Get sessions.
+        return sessions::get_sessions($this->id);
     }
 
     /**
@@ -96,6 +100,6 @@ class classroom {
     public static function get_classroom($id) {
         global $DB;
 
-        return $DB->get_record('classroom', ['id' => $id]);
+        return $DB->get_record('classrooms', ['id' => $id]);
     }
 }
