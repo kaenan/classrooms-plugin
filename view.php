@@ -47,6 +47,9 @@ $PAGE->set_pagelayout('incourse');
 
 // Security checks.
 
+// Actions.
+
+
 // Buttons.
 $PAGE->set_button($OUTPUT->single_button(
     new moodle_url('/mod/classrooms/edit_session.php', ['id' => $id, 'classroomid' => $classroom->id]),
@@ -56,7 +59,7 @@ $PAGE->set_button($OUTPUT->single_button(
 // Print page.
 echo $OUTPUT->header();
 
-if ($table = classrooms_sessions_table($classroom->activesessions, ['id', 'classroomid'])) {
+if ($table = classrooms_sessions_table($classroom->id, $classroom->activesessions, $id, ['id', 'classroomid', 'timecreated', 'timemodified'])) {
     echo $table;
 } else {
     echo "No sessions";

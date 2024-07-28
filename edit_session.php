@@ -32,6 +32,10 @@ require_once('session_form.php');
 $id = required_param('id', PARAM_INT);
 $classroomid = required_param('classroomid', PARAM_INT);
 $sessionid = optional_param('sessionid', 0, PARAM_INT);
+$adddate = optional_param('adddate', false, PARAM_NOTAGS);
+$delete_date = optional_param('deleted', 0, PARAM_INT);
+$numdates = optional_param('numdates', 0, PARAM_INT);
+$submitted = optional_param('submitbutton', false, PARAM_NOTAGS);
 
 // Get module data.
 [$course, $cm] = get_course_and_cm_from_cmid($id, 'classrooms');
@@ -45,24 +49,82 @@ $PAGE->set_title('Title Placeholder');
 $PAGE->set_heading('Heading Placeholder');
 $PAGE->add_body_class('limitedwidth');
 $PAGE->set_pagelayout('incourse');
+$PAGE->requires->js_call_amd('mod_classrooms/edit_sessions_form', 'init');
 
 // Security checks.
 $restrict = false;
 
+if (!$submitted) {
+    if ($sessionid && !$adddate && !$delete_date) {
+        $session = new sessions($sessionid);
+        $formdata = $session->form_data();
+        $numdates = $formdata['numdates'];
+    }
+}
+
 $classroom = new classroom($classroomid, $restrict);
 
-$form = new session_form();
-$form->set_data(
-    [
-        'id' => $id,
-        'classroomid' => $classroomid,
-        'sessionid' => $sessionid
-    ]
-);
+$custom_data = [];
+if ($adddate) {
+    $numdates++;
+
+}
+
+for ($i = 0; $i < $numdates + 1; $i++) {
+    $key = 'session_deleted_' . $i;
+    if (isset($_GET[$key])) {
+        $custom_data[$key] = $_GET[$key];
+    }
+}
+
+$custom_data['numdates'] = $numdates;
+
+$form = new session_form(null, $custom_data);
+
+if ($adddate) {
+    $setdata = $_GET;
+    $setdata['numdates'] = $numdates;
+    $form->set_data(
+        $setdata
+    );
+} else if ($delete_date) {
+    $setdata = $_GET;
+    $form->set_data(
+        $setdata
+    );
+} else if ($sessionid) {
+    $formdata['id'] = $id;
+    $form->set_data(
+        $formdata
+    );
+} else {
+    $form->set_data(
+        [
+            'id' => $id,
+            'classroomid' => $classroomid,
+            'sessionid' => $sessionid,
+            'numdates' => 0
+        ]
+    );
+}
 
 if ($data = $form->get_data()) {
+    if (isset($data->adddate)) {
+        redirect(new moodle_url($PAGE->url, (array) $data));
+    }
+
+    foreach ($_POST as $key => $val) {
+        if (substr($key, 0, 6) == 'delete') {
+            $data->deleted = 1;
+            $delete = 'session_deleted_' . substr($key, 7);
+            $data->$delete = 1;
+            redirect(new moodle_url($PAGE->url, (array) $data));
+        }
+    }
 
     if ($data->sessionid) {
+        $session = new sessions($data->sessionid);
+        $session->update($data);
 
     } else {
         $sessionid = sessions::new($data);

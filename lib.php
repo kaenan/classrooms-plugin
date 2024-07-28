@@ -47,7 +47,7 @@ function classrooms_delete_instance($id): bool {
     return $classroom->delete();
 }
 
-function classrooms_sessions_table($data, $hiddencolumns = ['id']) {
+function classrooms_sessions_table($classroomid, $data, $cmid, $hiddencolumns = ['id']) {
     global $OUTPUT;
 
     if (!isset($data)) {
@@ -61,6 +61,7 @@ function classrooms_sessions_table($data, $hiddencolumns = ['id']) {
             $table->head[] = $key;
         }
     }
+    $table->head[] = 'Dates';
     $table->head[] = 'Actions';
 
     foreach ($data as $d) {
@@ -78,12 +79,25 @@ function classrooms_sessions_table($data, $hiddencolumns = ['id']) {
             $cells[] = new html_table_cell($val);
         }
 
+        // Dates column.
+        // Get dates.
+        if ($dates = sessions::get_dates($d->id)) {
+            $datecell = "";
+            foreach ($dates as $date) {
+                $datecell .= date("Y/m/d", $date->timestart) . " - " . date("Y/m/d", $date->timefinish) . '<br>';
+            }
+            $cells[] = new html_table_cell($datecell);
+        } else {
+            $cells[] = new html_table_cell('No dates defined');
+        }
+
+
         // Actions column.
         $icons = [];
 
         // Edit icon.
         $icons[] = $OUTPUT->action_icon(
-            new moodle_url('/mod/classrooms/view.php', ['action' => 'edit', 'sessionid' => $d->id]),
+            new moodle_url('/mod/classrooms/edit_session.php', ['id' => $cmid, 'classroomid' => $classroomid, 'sessionid' => $d->id]),
             new pix_icon('b/document-edit', get_string('edit')),
         );
 

@@ -84,8 +84,6 @@ class classroom {
      * Get sessions of classroom record.
     */
     private function get_sessions($hidden) {
-        global $DB;
-
         // Get sessions.
         return sessions::get_sessions($this->id);
     }
