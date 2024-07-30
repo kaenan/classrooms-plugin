@@ -1,5 +1,7 @@
 <?php
 
+require_once(dirname(__FILE__) . '/../lib.php');
+
 class sessions {
 
     public $classroomid;
@@ -23,6 +25,15 @@ class sessions {
 
         $sessionid = $DB->insert_record('classroom_sessions', $record);
 
+        // Add custom fields.
+        if ($fields = classrooms_session_fields()) {
+            foreach ($fields as $f) {
+                $shortname = $f->shortname;
+                sessions::update_custom_field($sessionid, $f->id, $data->$shortname);
+            }
+        }
+
+        // Add dates.
         if ($data->numdates > 0) {
             for ($i = 1; $i < $data->numdates + 1; $i++) {
                 $start = "session_timestart_" . $i;
@@ -39,6 +50,14 @@ class sessions {
         $record->id = $this->id;
         $record->classroomid = $this->classroomid;
         $record->timemodified = time();
+
+        // Add custom fields.
+        if ($fields = classrooms_session_fields()) {
+            foreach ($fields as $f) {
+                $shortname = $f->shortname;
+                sessions::update_custom_field($this->id, $f->id, $data->$shortname);
+            }
+        }
 
         if ($data->numdates > 0) {
             for ($i = 1; $i < $data->numdates + 1; $i++) {
@@ -106,7 +125,20 @@ class sessions {
         $formdata = [];
         $formdata['sessionid'] = $this->id;
         $formdata['classroomid'] = $this->classroomid;
-        
+
+        // Get custom fields.
+        $sql =
+        "SELECT fd.id, fd.value, f.shortname
+          FROM {classroom_session_field_data} fd
+          JOIN {classroom_session_fields} f ON fd.fieldid = f.id
+         WHERE fd.sessionid = ?";
+        if ($fields = $DB->get_records_sql($sql, [$this->id])) { 
+            foreach ($fields as $f) {
+                $formdata[$f->shortname] = $f->value;
+            }
+        }
+
+        // Get dates.
         if ($dates = $DB->get_records('classroom_session_dates', ['sessionid' => $this->id])) {
             $formdata['numdates'] = count($dates);
 
@@ -120,6 +152,17 @@ class sessions {
         }
 
         return $formdata;
+    }
+
+    public function custom_fields() {
+        global $DB;
+
+        $sql =
+        "SELECT f.id, d.value, f.name
+           FROM {classroom_session_fields} f
+      LEFT JOIN {classroom_session_field_data} d ON f.id = d.fieldid AND d.sessionid = ?";
+
+        return $DB->get_records_sql($sql, [$this->id]);
     }
 
     /**
@@ -156,4 +199,21 @@ class sessions {
 
         return $DB->get_records('classroom_session_dates', ['sessionid' => $sessionid]);
     }
+
+    private static function update_custom_field($sessionid, $fieldid, $value) {
+        global $DB;
+
+        $rec                = new stdClass;
+        $rec->sessionid     = $sessionid;
+        $rec->fieldid       = $fieldid;
+        $rec->value         = $value;
+        $rec->timemodified  = time();
+
+        if ($data = $DB->get_record('classroom_session_field_data', ['sessionid' => $sessionid, 'fieldid' => $fieldid])) {
+            $rec->id = $data->id;
+            return $DB->update_record('classroom_session_field_data', $rec);
+        }
+
+        return $DB->insert_record('classroom_session_field_data', $rec);
+    } 
 }

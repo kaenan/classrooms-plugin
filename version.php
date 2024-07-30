@@ -24,7 +24,7 @@
 
  defined('MOODLE_INTERNAL') || die();
 
- $plugin->version = 2024071300;
+ $plugin->version = 2024071301;
  $plugin->requires = 2024041600;
  $plugin->component = 'mod_classrooms';
  $plugin->maturity = MATURITY_STABLE;

@@ -79,6 +79,10 @@ for ($i = 0; $i < $numdates + 1; $i++) {
 
 $custom_data['numdates'] = $numdates;
 
+// Custom session fields.
+$custom_data['fields'] = classrooms_session_fields();
+
+
 $form = new session_form(null, $custom_data);
 
 if ($adddate) {

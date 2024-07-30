@@ -61,10 +61,20 @@ function classrooms_sessions_table($classroomid, $data, $cmid, $hiddencolumns = 
             $table->head[] = $key;
         }
     }
+
+    // Custom field headers.
+    $tmpsess = new sessions(reset($data)->id);
+    foreach ($tmpsess->custom_fields() as $cf) {
+        $table->head[] = $cf->name;
+    }
+
     $table->head[] = 'Dates';
     $table->head[] = 'Actions';
 
     foreach ($data as $d) {
+
+        $session = new sessions($d->id);
+
         $cells = [];
         foreach ($d as $key => $val) {
             if (in_array(strtolower($key), $hiddencolumns)) {
@@ -77,6 +87,11 @@ function classrooms_sessions_table($classroomid, $data, $cmid, $hiddencolumns = 
             }
 
             $cells[] = new html_table_cell($val);
+        }
+
+        // Custom field data.
+        foreach ($session->custom_fields() as $cf) {
+            $cells[] = new html_table_cell($cf->value);
         }
 
         // Dates column.
@@ -107,4 +122,14 @@ function classrooms_sessions_table($classroomid, $data, $cmid, $hiddencolumns = 
     }
 
     return html_writer::table($table);
+}
+
+function classrooms_session_fields() {
+    global $DB;
+
+    if ($data = $DB->get_records('classroom_session_fields')) {
+        return $data;
+    }
+
+    return [];
 }

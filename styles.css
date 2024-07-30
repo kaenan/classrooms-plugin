@@ -1,0 +1,7 @@
+.session_date {
+    border-radius: 25px;
+    border: 3px solid rgb(66, 66, 66);
+    background-color: rgb(238, 238, 238);
+    padding: 20px;
+    margin-bottom: 10px;
+}

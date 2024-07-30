@@ -22,6 +22,14 @@ class session_form extends moodleform {
         $mform->addElement('hidden', 'numdates', $numdates);
         $mform->settype('numdates', PARAM_INT);
 
+        // Custom session fields.
+        foreach ($this->_customdata['fields'] as $f) {
+
+            $mform->addElement('text', $f->shortname, $f->name);
+            $mform->settype($f->shortname, PARAM_NOTAGS);
+
+        }
+
         $mform->addElement('submit', 'adddate', 'Add date');
 
         if ($numdates > 0) {
@@ -35,25 +43,29 @@ class session_form extends moodleform {
 
             for ($i = 1; $i < $numdates + 1; $i++) {
 
+                $mform->addElement('html', html_writer::start_div('session_date'));
+
                 $mform->addElement('hidden', 'session_dateid_' . $i, 0);
                 $mform->settype('session_dateid_' . $i, PARAM_INT);
 
                 $mform->addElement('hidden', 'session_deleted_' . $i, 0);
                 $mform->settype('session_deleted_' . $i, PARAM_INT);
-                
-                if ((isset($this->_customdata['session_deleted_' . $i]) && $this->_customdata['session_deleted_' . $i] == 0)
-                || !isset($this->_customdata['session_deleted_' . $i])) {
-                    $mform->addElement(
-                        'html',
-                        html_writer::span('Session times '. $i, 'mr-3') . '<input type="submit" value="Delete" name="delete_'. $i .'" class="btn btn-secondary">' 
-                    );
-                }
 
                 $mform->addElement('date_time_selector', 'session_timestart_' . $i, 'Start time', $arr);
                 $mform->hideIf('session_timestart_' . $i, 'session_deleted_' . $i, 'eq', 1);
 
                 $mform->addElement('date_time_selector', 'session_timefinish_' . $i, 'Finish time', $arr);
                 $mform->hideIf('session_timefinish_' . $i, 'session_deleted_' . $i, 'eq', 1);
+
+                if ((isset($this->_customdata['session_deleted_' . $i]) && $this->_customdata['session_deleted_' . $i] == 0)
+                || !isset($this->_customdata['session_deleted_' . $i])) {
+                    $mform->addElement(
+                        'html',
+                        '<input type="submit" value="Delete" name="delete_'. $i .'" class="btn btn-secondary">' 
+                    );
+                }
+
+                $mform->addElement('html', html_writer::end_div());
             }
 
             $mform->closeHeaderBefore('buttonar');
