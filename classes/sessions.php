@@ -8,11 +8,29 @@ class sessions {
 
     public $id;
 
+    public $details;
+
+    public $duration;
+
+    public $hidden;
+
+    public $capacity;
+
+    public $overbooking;
+
+    public $cost;
+
     public function __construct($id)
     {
         $data = sessions::get_session($id);
-        $this->id = $data->id;
-        $this->classroomid = $data->classroomid;
+        $this->id           = $data->id;
+        $this->classroomid  = $data->classroomid;
+        $this->details      = $data->details;
+        $this->duration     = $data->duration;
+        $this->hidden       = $data->hidden;
+        $this->capacity     = $data->capacity;
+        $this->overbooking  = $data->overbooking;
+        $this->cost         = $data->cost;
     }
 
     public static function new($data) {
@@ -20,6 +38,11 @@ class sessions {
 
         $record = new stdClass;
         $record->classroomid = $data->classroomid;
+        $record->details = $data->details['text'];
+        $record->capacity = $data->capacity;
+        $record->overbooking = $data->overbooking;
+        $record->hidden = $data->hidden;
+        $record->cost = $data->cost;
         $record->timecreated = time();
         $record->timemodified = time();
 
@@ -49,7 +72,14 @@ class sessions {
         $record = new stdClass;
         $record->id = $this->id;
         $record->classroomid = $this->classroomid;
+        $record->details = $data->details['text'];
+        $record->capacity = $data->capacity;
+        $record->overbooking = $data->overbooking;
+        $record->hidden = $data->hidden;
+        $record->cost = $data->cost;
         $record->timemodified = time();
+
+        $DB->update_record('classroom_sessions', $record);
 
         // Add custom fields.
         if ($fields = classrooms_session_fields()) {
@@ -125,6 +155,12 @@ class sessions {
         $formdata = [];
         $formdata['sessionid'] = $this->id;
         $formdata['classroomid'] = $this->classroomid;
+        $formdata['details'] = $this->details;
+        $formdata['duration'] = $this->duration;
+        $formdata['hidden'] = $this->hidden;
+        $formdata['capacity'] = $this->capacity;
+        $formdata['overbooking'] = $this->overbooking;
+        $formdata['cost'] = $this->cost;
 
         // Get custom fields.
         $sql =

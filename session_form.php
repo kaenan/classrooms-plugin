@@ -22,6 +22,10 @@ class session_form extends moodleform {
         $mform->addElement('hidden', 'numdates', $numdates);
         $mform->settype('numdates', PARAM_INT);
 
+        // Details.
+        $mform->addElement('editor', 'details', 'Details');
+        $mform->settype('details', PARAM_RAW);
+
         // Custom session fields.
         foreach ($this->_customdata['fields'] as $f) {
 
@@ -29,6 +33,22 @@ class session_form extends moodleform {
             $mform->settype($f->shortname, PARAM_NOTAGS);
 
         }
+
+        // Capacity.
+        $mform->addElement('text', 'capacity', 'Capacity');
+        $mform->setDefault('capacity', 10);
+        $mform->settype('capacity', PARAM_INT);
+
+        // Over booking.
+        $mform->addElement('advcheckbox', 'overbooking', 'Allow overbooking?');
+
+        // Capacity.
+        $mform->addElement('text', 'cost', 'Cost (£)');
+        $mform->setDefault('cost', 0);
+        $mform->settype('cost', PARAM_INT);
+
+        // Hidden.
+        $mform->addElement('advcheckbox', 'hidden', 'Hide session from list and lock signups?');
 
         $mform->addElement('submit', 'adddate', 'Add date');
 
@@ -43,7 +63,12 @@ class session_form extends moodleform {
 
             for ($i = 1; $i < $numdates + 1; $i++) {
 
-                $mform->addElement('html', html_writer::start_div('session_date'));
+                $check = (isset($this->_customdata['session_deleted_' . $i]) && $this->_customdata['session_deleted_' . $i] == 0)
+                || !isset($this->_customdata['session_deleted_' . $i]);
+
+                if ($check) {
+                    $mform->addElement('html', html_writer::start_div('session_date'));
+                }
 
                 $mform->addElement('hidden', 'session_dateid_' . $i, 0);
                 $mform->settype('session_dateid_' . $i, PARAM_INT);
@@ -57,15 +82,14 @@ class session_form extends moodleform {
                 $mform->addElement('date_time_selector', 'session_timefinish_' . $i, 'Finish time', $arr);
                 $mform->hideIf('session_timefinish_' . $i, 'session_deleted_' . $i, 'eq', 1);
 
-                if ((isset($this->_customdata['session_deleted_' . $i]) && $this->_customdata['session_deleted_' . $i] == 0)
-                || !isset($this->_customdata['session_deleted_' . $i])) {
+                if ($check) {
                     $mform->addElement(
                         'html',
                         '<input type="submit" value="Delete" name="delete_'. $i .'" class="btn btn-secondary">' 
                     );
-                }
 
-                $mform->addElement('html', html_writer::end_div());
+                    $mform->addElement('html', html_writer::end_div());
+                }
             }
 
             $mform->closeHeaderBefore('buttonar');

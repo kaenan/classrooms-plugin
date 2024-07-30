@@ -82,22 +82,30 @@ $custom_data['numdates'] = $numdates;
 // Custom session fields.
 $custom_data['fields'] = classrooms_session_fields();
 
-
 $form = new session_form(null, $custom_data);
 
+// Set from data.
 if ($adddate) {
     $setdata = $_GET;
+    // echo var_dump($setdata); die;
     $setdata['numdates'] = $numdates;
+    if (isset($setdata['details'])) {
+        $setdata['details'] = ['text' => $setdata['details'], 'format' => 1];
+    }
     $form->set_data(
         $setdata
     );
 } else if ($delete_date) {
     $setdata = $_GET;
+    $setdata['details'] = ['text' => $setdata['details'], 'format' => 1];
     $form->set_data(
         $setdata
     );
 } else if ($sessionid) {
     $formdata['id'] = $id;
+    if (isset($formdata['details'])) {
+        $formdata['details'] = ['text' => $formdata['details'], 'format' => 1];
+    }
     $form->set_data(
         $formdata
     );
@@ -114,6 +122,7 @@ if ($adddate) {
 
 if ($data = $form->get_data()) {
     if (isset($data->adddate)) {
+        $data->details = $data->details['text'];
         redirect(new moodle_url($PAGE->url, (array) $data));
     }
 
@@ -122,6 +131,7 @@ if ($data = $form->get_data()) {
             $data->deleted = 1;
             $delete = 'session_deleted_' . substr($key, 7);
             $data->$delete = 1;
+            $data->details = $data->details['text'];
             redirect(new moodle_url($PAGE->url, (array) $data));
         }
     }

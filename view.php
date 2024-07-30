@@ -59,7 +59,8 @@ $PAGE->set_button($OUTPUT->single_button(
 // Print page.
 echo $OUTPUT->header();
 
-if ($table = classrooms_sessions_table($classroom->id, $classroom->activesessions, $id, ['id', 'classroomid', 'timecreated', 'timemodified'])) {
+if ($table = classrooms_sessions_table($classroom->id, $classroom->activesessions, $id, 
+    ['id', 'classroomid', 'details', 'hidden', 'overbooking', 'timecreated', 'timemodified'])) {
     echo $table;
 } else {
     echo "No sessions";

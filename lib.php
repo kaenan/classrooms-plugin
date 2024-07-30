@@ -50,7 +50,7 @@ function classrooms_delete_instance($id): bool {
 function classrooms_sessions_table($classroomid, $data, $cmid, $hiddencolumns = ['id']) {
     global $OUTPUT;
 
-    if (!isset($data)) {
+    if (!$data) {
         return false;
     }
 
